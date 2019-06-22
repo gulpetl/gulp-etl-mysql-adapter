@@ -1,5 +1,5 @@
 let gulp = require('gulp')
-import { tapCsv } from '../src/plugin'
+import { src as mysqlSrc } from '../src/plugin'
 
 import * as loglevel from 'loglevel'
 const log = loglevel.getLogger('gulpfile')
@@ -35,7 +35,7 @@ function runTapCsv(callback: any) {
     .on('data', function (file:Vinyl) {
       log.info('Starting processing on ' + file.basename)
     })    
-    .pipe(tapCsv({raw:true/*, info:true */}))
+    // .pipe(tapCsv({raw:true/*, info:true */}))
     .pipe(rename({
       extname: ".ndjson",
     }))      
@@ -61,6 +61,42 @@ export function csvParseWithoutGulp(callback: any) {
     console.log(data)
   });
   
+}
+
+
+
+export function testAdapter(callback: any) {
+  log.info('gulp task starting for ' + PLUGIN_NAME)
+
+  try {
+
+
+  return mysqlSrc('../testdata/cars.csv',{buffer:gulpBufferMode})
+    .pipe(errorHandler(function(err:any) {
+      log.error('Error: ' + err)
+      callback(err)
+    }))
+    .on('data', function (file:Vinyl) {
+      log.info('Starting processing on ' + file.basename)
+    })    
+    // .pipe(tapCsv({raw:true/*, info:true */}))
+    // .pipe(rename({
+    //   extname: ".ndjson",
+    // }))      
+    .pipe(gulp.dest('../testdata/processed'))
+    .on('data', function (file:Vinyl) {
+      log.info('Finished processing on ' + file.basename)
+    })    
+    .on('end', function () {
+      log.info('gulp task complete')
+      callback()
+    })
+
+  }
+  catch (err) {
+    log.error(err)
+  }
+
 }
 
 exports.default = gulp.series(runTapCsv)

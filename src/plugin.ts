@@ -7,16 +7,40 @@ import * as loglevel from 'loglevel'
 const log = loglevel.getLogger(PLUGIN_NAME) // get a logger instance based on the project name
 log.setLevel((process.env.DEBUG_LEVEL || 'warn') as log.LogLevelDesc)
 
-const parse = require('csv-parse')
+const from2 = require('from2');
+import * as path from 'path'
+
 
 /** wrap incoming recordObject in a Singer RECORD Message object*/
 function createRecord(recordObject:Object, streamName: string) : any {
   return {type:"RECORD", stream:streamName, record:recordObject}
 }
 
+// dead-simple stream-mode-only gulp vinyl adapter: loads a file as a stream and wraps it in a vinyl file, then returns vinyl file in a readable stream
+export function src(filePath:string, optionsIgnoredForNow:any) {
+  let fileStream
+  let vinylFile
+  try {
+    fileStream = require('fs').createReadStream(filePath)
+    // let asdf = (undefined as any).wontWork // create an error for testing
+    vinylFile = new Vinyl({
+      base: path.dirname(filePath),    
+      path:filePath,
+      contents:fileStream
+    });
+  }
+  catch (err) {
+    throw new PluginError(PLUGIN_NAME, err);
+  }
+
+  return from2.obj([vinylFile])
+}
+
+
 /* This is a gulp-etl plugin. It is compliant with best practices for Gulp plugins (see
 https://github.com/gulpjs/gulp/blob/master/docs/writing-a-plugin/guidelines.md#what-does-a-good-plugin-look-like ),
 and like all gulp-etl plugins it accepts a configObj as its first parameter */
+/*
 export function tapCsv(configObj: any) {
   if (!configObj) configObj = {}
   if (!configObj.columns) configObj.columns = true // we don't allow false for columns; it results in arrays instead of objects for each record
@@ -134,3 +158,5 @@ export function tapCsv(configObj: any) {
 
   return strm
 }
+
+*/

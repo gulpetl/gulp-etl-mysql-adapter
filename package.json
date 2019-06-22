@@ -21,7 +21,6 @@
   ],
   "homepage": "https://gulpetl.com",
   "dependencies": {
-    "csv-parse": "^4.4.1",
     "from2": "^2.3.0",
     "gulp-error-handle": "^1.0.1",
     "loglevel": "^1.6.1",
