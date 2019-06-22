@@ -1,0 +1,2 @@
+{"type":"RECORD","stream":"mysqlResults","record":{"CustomerRef":2295,"message":"Hello TERRY! You got some new info today.","phone":"1.800.000.0000"}}
+{"type":"RECORD","stream":"mysqlResults","record":{"CustomerRef":2296,"message":"Hello ACKER! You got some new info today.","phone":"1.800.000.0000"}}

@@ -6,6 +6,7 @@ const PLUGIN_NAME = module.exports.name;
 import * as loglevel from 'loglevel'
 const log = loglevel.getLogger(PLUGIN_NAME) // get a logger instance based on the project name
 log.setLevel((process.env.DEBUG_LEVEL || 'warn') as log.LogLevelDesc)
+import * as mysql from 'mysql'
 
 const from2 = require('from2');
 import * as path from 'path'
@@ -16,16 +17,27 @@ function createRecord(recordObject:Object, streamName: string) : any {
   return {type:"RECORD", stream:streamName, record:recordObject}
 }
 
-// dead-simple stream-mode-only gulp vinyl adapter: loads a file as a stream and wraps it in a vinyl file, then returns vinyl file in a readable stream
-export function src(filePath:string, optionsIgnoredForNow:any) {
+// stream-mode-only gulp vinyl adapter: loads results of mysql call and wraps it in a vinyl file, then returns vinyl file in a readable stream
+export function src(virtualFilePath:string, options:any) {
   let fileStream
   let vinylFile
   try {
-    fileStream = require('fs').createReadStream(filePath)
-    // let asdf = (undefined as any).wontWork // create an error for testing
+    let conn = mysql.createConnection(options.connection)    
+
+    // fileStream = require('fs').createReadStream(virtualFilePath)
+    fileStream = conn.query(options.sql)
+    .on('end', function() {
+      log.debug('all rows have been received')
+    })    
+    .stream()
+
+    log.debug('closing connection when all rows are received')
+    conn.end()
+
+    // create a file wrapper that will pretend to gulp that it came from the path represented by virtualFilePath
     vinylFile = new Vinyl({
-      base: path.dirname(filePath),    
-      path:filePath,
+      base: path.dirname(virtualFilePath),    
+      path:virtualFilePath,
       contents:fileStream
     });
   }
@@ -34,35 +46,26 @@ export function src(filePath:string, optionsIgnoredForNow:any) {
   }
 
   return from2.obj([vinylFile])
+  // pipe our vinyl file (consisting of objects which each represent a row of mysql data) through our built-in plugin below
+  .pipe(tapMysql({}))
 }
 
 
 /* This is a gulp-etl plugin. It is compliant with best practices for Gulp plugins (see
 https://github.com/gulpjs/gulp/blob/master/docs/writing-a-plugin/guidelines.md#what-does-a-good-plugin-look-like ),
 and like all gulp-etl plugins it accepts a configObj as its first parameter */
-/*
-export function tapCsv(configObj: any) {
+export function tapMysql(configObj: any) {
   if (!configObj) configObj = {}
-  if (!configObj.columns) configObj.columns = true // we don't allow false for columns; it results in arrays instead of objects for each record
 
   // creating a stream through which each file will pass - a new instance will be created and invoked for each file 
   // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
   const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb: Function) {
     const self = this
     let returnErr: any = null
-    const parser = parse(configObj)
 
     // post-process line object
     const handleLine = (lineObj: any, _streamName : string): object | null => {
-      if (parser.options.raw || parser.options.info) {
-        let newObj = createRecord(lineObj.record, _streamName)
-        if (lineObj.raw) newObj.raw = lineObj.raw
-        if (lineObj.info) newObj.info = lineObj.info
-        lineObj = newObj
-      }
-      else {
-        lineObj = createRecord(lineObj, _streamName)
-      }
+      lineObj = createRecord(lineObj, _streamName)
       return lineObj
     }
 
@@ -70,7 +73,7 @@ export function tapCsv(configObj: any) {
 
       let transformer = through2.obj(); // new transform stream, in object mode
   
-      // transformer is designed to follow csv-parse, which emits objects, so dataObj is an Object. We will finish by converting dataObj to a text line
+      // transformer is designed to follow mysql, which emits objects, so dataObj is an Object. We will finish by converting dataObj to a text line
       transformer._transform = function (dataObj: Object, encoding: string, callback: Function) {
         let returnErr: any = null
         try {
@@ -99,7 +102,7 @@ export function tapCsv(configObj: any) {
     }
     else if (file.isBuffer()) {
 
-
+/*
       parse(file.contents as Buffer, configObj, function(err:any, linesArray : []){
         // this callback function runs when the parser finishes its work, returning an array parsed lines 
         let tempLine: any
@@ -126,20 +129,10 @@ export function tapCsv(configObj: any) {
         log.debug('calling callback')    
         cb(returnErr, file);    
       })
-
+*/
     }
     else if (file.isStream()) {
       file.contents = file.contents
-        .pipe(parser)
-        .on('end', function () {
-
-          // DON'T CALL THIS HERE. It MAY work, if the job is small enough. But it needs to be called after the stream is SET UP, not when the streaming is DONE.
-          // Calling the callback here instead of below may result in data hanging in the stream--not sure of the technical term, but dest() creates no file, or the file is blank
-          // cb(returnErr, file);
-          // log.debug('calling callback')    
-
-          log.debug('csv parser is done')
-        })
         // .on('data', function (data:any, err: any) {
         //   log.debug(data)
         // })
@@ -148,8 +141,13 @@ export function tapCsv(configObj: any) {
           self.emit('error', new PluginError(PLUGIN_NAME, err));
         })
         .pipe(newTransformer(streamName))
+        // .on('end', function () {
+        // })
 
-      // after our stream is set up (not necesarily finished) we call the callback
+      // set extension to match the new filetype; we are outputting a Message Stream, which is an .ndjson file
+      file.extname = '.ndjson'
+
+        // after our stream is set up (not necesarily finished) we call the callback
       log.debug('calling callback')    
       cb(returnErr, file);
     }
@@ -159,4 +157,3 @@ export function tapCsv(configObj: any) {
   return strm
 }
 
-*/

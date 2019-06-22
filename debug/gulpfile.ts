@@ -1,5 +1,5 @@
 let gulp = require('gulp')
-import { src as mysqlSrc } from '../src/plugin'
+import * as tapMysql from '../src/plugin'
 
 import * as loglevel from 'loglevel'
 const log = loglevel.getLogger('gulpfile')
@@ -24,32 +24,6 @@ function switchToBuffer(callback: any) {
   callback();
 }
 
-function runTapCsv(callback: any) {
-  log.info('gulp task starting for ' + PLUGIN_NAME)
-
-  return gulp.src('../testdata/*.csv',{buffer:gulpBufferMode})
-    .pipe(errorHandler(function(err:any) {
-      log.error('Error: ' + err)
-      callback(err)
-    }))
-    .on('data', function (file:Vinyl) {
-      log.info('Starting processing on ' + file.basename)
-    })    
-    // .pipe(tapCsv({raw:true/*, info:true */}))
-    .pipe(rename({
-      extname: ".ndjson",
-    }))      
-    .pipe(gulp.dest('../testdata/processed'))
-    .on('data', function (file:Vinyl) {
-      log.info('Finished processing on ' + file.basename)
-    })    
-    .on('end', function () {
-      log.info('gulp task complete')
-      callback()
-    })
-
-}
-
 export function csvParseWithoutGulp(callback: any) {
 
   const parse = require('csv-parse')
@@ -65,13 +39,30 @@ export function csvParseWithoutGulp(callback: any) {
 
 
 
-export function testAdapter(callback: any) {
+function testAdapter(callback: any) {
   log.info('gulp task starting for ' + PLUGIN_NAME)
 
   try {
 
+    // contains secure info; store in parent folder of this project, outside of repo
+    let configObj = require('../../mysql-settings.json')
 
-  return mysqlSrc('../testdata/cars.csv',{buffer:gulpBufferMode})
+    /* 
+    let configObj = 
+    // mysql-settings.json should look like this: 
+    {
+      "sql": "SELECT * FROM customers LIMIT 2;",
+      "connection": {
+        "host"     : "example.org",
+        "user"     : "bob",
+        "password" : "secret",
+        "database" : "schemaName"
+      }
+    }
+    
+    */
+
+  return tapMysql.src('mysqlResults',configObj)
     .pipe(errorHandler(function(err:any) {
       log.error('Error: ' + err)
       callback(err)
@@ -99,5 +90,5 @@ export function testAdapter(callback: any) {
 
 }
 
-exports.default = gulp.series(runTapCsv)
-exports.runTapCsvBuffer = gulp.series(switchToBuffer, runTapCsv)
+exports.default = gulp.series(testAdapter)
+exports.runTapCsvBuffer = gulp.series(switchToBuffer, testAdapter)
