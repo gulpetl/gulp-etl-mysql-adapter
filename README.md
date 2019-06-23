@@ -20,6 +20,7 @@ Since this adapter doesn't pull from an existing file, the "glob" parameter is a
 ##### configObj / mysql-settings.json
 ```
 {
+  "buffer": false,
   "sql": "SELECT * FROM customers LIMIT 2;",
   "connection": {
     "host"     : "example.org",
