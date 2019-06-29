@@ -5,49 +5,73 @@ const pkginfo = require('pkginfo')(module); // project package.json info into mo
 const PLUGIN_NAME = module.exports.name;
 import * as loglevel from 'loglevel'
 const log = loglevel.getLogger(PLUGIN_NAME) // get a logger instance based on the project name
-log.setLevel((process.env.DEBUG_LEVEL || 'warn') as log.LogLevelDesc)
+log.setLevel((process.env.DEBUG_LEVEL || 'warn') as loglevel.LogLevelDesc)
 import * as mysql from 'mysql'
 
 const from2 = require('from2');
 import * as path from 'path'
 
+// import * as gulpBuffer from 'gulp-buffer'
+const gulpBuffer = require('gulp-buffer')
+
+// const 
 
 /** wrap incoming recordObject in a Singer RECORD Message object*/
 function createRecord(recordObject:Object, streamName: string) : any {
   return {type:"RECORD", stream:streamName, record:recordObject}
 }
 
-// stream-mode-only gulp vinyl adapter: loads results of mysql call and wraps it in a vinyl file, then returns vinyl file in a readable stream
-export function src(virtualFilePath:string, options:any) {
-  let fileStream
-  let vinylFile
+// gulp vinyl adapter for mysql: loads results of mysql call and wraps it in a vinyl file, then returns vinyl file in a readable stream
+export function src(this: any, pretendFilePath:string, options:any) {
+  let result
+  
   try {
     let conn = mysql.createConnection(options.connection)    
-
-    // fileStream = require('fs').createReadStream(virtualFilePath)
-    fileStream = conn.query(options.sql)
+    let vinylFile:Vinyl
+    // create a file wrapper that will pretend to gulp that it came from the path represented by pretendFilePath
+    vinylFile = new Vinyl({
+      base: path.dirname(pretendFilePath),    
+      path:pretendFilePath,
+      // contents:
+    });
+  
+    result = from2.obj([vinylFile])
+    
+    let fileStream = conn.query(options.sql)
     .on('end', function() {
       log.debug('all rows have been received')
     })    
     .stream()
 
+    vinylFile.contents=fileStream
     log.debug('closing connection when all rows are received')
     conn.end()
 
-    // create a file wrapper that will pretend to gulp that it came from the path represented by virtualFilePath
-    vinylFile = new Vinyl({
-      base: path.dirname(virtualFilePath),    
-      path:virtualFilePath,
-      contents:fileStream
-    });
+    // TODO: Figure out how to deal with errors here
+    // this does not trigger parent stream's error handling
+    // result.emit(new PluginError(PLUGIN_NAME, 'No problem'))
+
+    // this creates an error that can be caught if the parent stream is wrapped in a try/catch
+    // throw new PluginError(PLUGIN_NAME, 'No problem')
+    
+    result = result.pipe(tapMysql({}))
+    // buffer mode: stream through gulpBuffer to convert vinylFile to isBuffer(true)
+    if (options.buffer !== false) {
+      result = result.pipe(gulpBuffer())
+      // gulp-buffer issues:
+      // - requires data to be buffers (gulp-etl uses strings and objects)
+      // - files silently upon error (such as passing strings instead of buffers)
+    }
   }
   catch (err) {
-    throw new PluginError(PLUGIN_NAME, err);
+    // emitting here causes some other error: TypeError: Cannot read property 'pipe' of undefined
+    // result.emit(new PluginError(PLUGIN_NAME, err))
+    
+    // For now, bubble error up to calling function
+    throw new PluginError(PLUGIN_NAME, err)
   }
-
-  return from2.obj([vinylFile])
-  // pipe our vinyl file (consisting of objects which each represent a row of mysql data) through our built-in plugin below
-  .pipe(tapMysql({}))
+  
+  return result
 }
 
 
@@ -81,7 +105,8 @@ export function tapMysql(configObj: any) {
           if (handledObj) {
             let handledLine = JSON.stringify(handledObj)
             log.debug(handledLine)
-            this.push(handledLine + '\n');
+            // has to be buffer, for now, because we're using gulp-buffer
+            this.push(Buffer.from(handledLine + '\n'));
           }
         } catch (err) {
           returnErr = new PluginError(PLUGIN_NAME, err);
@@ -101,10 +126,7 @@ export function tapMysql(configObj: any) {
       return cb(returnErr, file)
     }
     else if (file.isBuffer()) {
-
-/*
-      parse(file.contents as Buffer, configObj, function(err:any, linesArray : []){
-        // this callback function runs when the parser finishes its work, returning an array parsed lines 
+        let linesArray = file.contents//.toArray()
         let tempLine: any
         let resultArray = [];
         // we'll call handleLine on each line
@@ -128,8 +150,6 @@ export function tapMysql(configObj: any) {
         // we are done with file processing. Pass the processed file along
         log.debug('calling callback')    
         cb(returnErr, file);    
-      })
-*/
     }
     else if (file.isStream()) {
       file.contents = file.contents

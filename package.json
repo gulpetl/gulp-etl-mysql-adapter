@@ -1,50 +1,57 @@
 {
-  "name": "gulp-etl-tap-csv",
-  "version": "1.0.2",
-  "repository": "https://github.com/gulpetl/gulp-etl-tap-csv",
-  "description": "Convert CSV files to JSON compatible with gulp-etl",
+  "name": "gulp-etl-mysql-adapter",
+  "version": "1.0.0",
+  "repository": "https://github.com/gulpetl/gulp-etl-tap-mysql",
+  "description": "Extract data from mysql into gulp-etl Message Stream JSON",
   "main": "dist/js/plugin.js",
   "typings": "dist/types/plugin.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "build": "tsc && tsc --module commonjs --outDir dist/lib",
+    "build": "tsc",
+    "prebuild": "npm run clean",
+    "clean": "rimraf dist/*",
     "test": "jest"
   },
   "author": "peterl@sbcotton.com",
   "license": "MIT",
   "keywords": [
-    "gulpplugin",
-    "csv",
-    "gulp-etl"
+    "gulpfriendly",
+    "mysql",
+    "sql",
+    "gulp",
+    "gulp-etl",
+    "vinyl",
+    "adapter"
   ],
   "homepage": "https://gulpetl.com",
   "dependencies": {
     "from2": "^2.3.0",
+    "gulp-buffer": "0.0.2",
     "gulp-error-handle": "^1.0.1",
-    "loglevel": "^1.6.1",
+    "loglevel": "^1.6.3",
     "mysql": "^2.17.1",
     "pkginfo": "^0.4.1",
     "plugin-error": "^1.0.1",
     "through2": "^3.0.1",
-    "vinyl": "^2.2.0"
+    "vinyl": "^2.2.0",
+    "vinyl-source-buffer": "^1.1.1"
   },
   "devDependencies": {
-    "@types/del": "^4.0.0",
     "@types/gulp-rename": "0.0.33",
     "@types/jest": "^23.3.14",
-    "@types/loglevel": "^1.5.4",
+    "@types/loglevel": "^1.6.3",
     "@types/mysql": "^2.15.6",
-    "@types/node": "^10.14.6",
+    "@types/node": "^10.14.10",
     "@types/vinyl": "^2.0.3",
     "@types/vinyl-paths": "0.0.31",
     "gulp": "^4.0.2",
-    "gulp-rename": "^1.4.0",
     "jest": "^24.8.0",
-    "jest-spec-reporter": "^1.0.5",
+    "jest-spec-reporter": "^1.0.6",
+    "rimraf": "^2.6.3",
     "ts-jest": "^24.0.2",
     "ts-node": "^7.0.1",
-    "typescript": "^3.4.5"
+    "typescript": "^3.5.2"
   }
 }

@@ -1,6 +1,6 @@
-# gulp-etl-tap-mysql #
+# gulp-etl-mysql-adapter #
 
-This plugin connects to **MySQL** databases, running SQL queries and extracting the results to **gulp-etl** **Message Stream** files. It is a **gulp-etl** wrapper for [mysql](https://www.npmjs.com/package/mysql).
+This plugin connects to **MySQL** databases, running SQL queries and extracting the resulting rows to **gulp-etl** **Message Stream** files. It is a **gulp-etl** wrapper for [mysql](https://www.npmjs.com/package/mysql).
 
 This is a **[gulp-etl](https://gulpetl.com/)** tap, but unlike most of the other gulp-etl modules it is not a [gulp](https://gulpjs.com/) **[plugin](https://gulpjs.com/docs/en/getting-started/using-plugins)**; it is actually a **[vinyl adapter](https://gulpjs.com/docs/en/api/concepts#vinyl-adapters)**--it features a replacement for **[gulp.src()](https://gulpjs.com/docs/en/api/src)**. **gulp-etl** plugins and adapters work with [ndjson](http://ndjson.org/) data streams/files which we call **Message Streams** and which are compliant with the [Singer specification](https://github.com/singer-io/getting-started/blob/master/docs/SPEC.md#output). In the **gulp-etl** ecosystem, **taps** tap into an outside format or system (in this case, a MySQL database) and convert their contents/output to a Message Stream, and **targets** convert/output Message Streams to an outside format or system. In this way, these modules can be stacked to convert from one format or system to another, either directly or with tranformations or other parsing in between. Message Streams look like this:
 
@@ -16,7 +16,7 @@ This is a **[gulp-etl](https://gulpetl.com/)** tap, but unlike most of the other
 ### Usage
 **gulp** adapters take two parameters: a glob, which is used to locate file(s) in the file system, and an optional config object with settings specific to the adapter. For example: ```src('*.txt', {buffer:false})```
 
-Since this adapter doesn't pull from an existing file, the "glob" parameter is a virtual filename (with optional path info) which is assigned to the data file extracted from the server, e.g. ```mysqlData.ndjson```. And the configObj should look like this: 
+Since this adapter doesn't pull from an existing file, the "glob" parameter is a "pretend" filename (with optional path info) which is assigned to the data file extracted from the server, e.g. ```mysqlData.ndjson```. And the configObj should look like this: 
 ##### configObj / mysql-settings.json
 ```
 {
@@ -37,14 +37,14 @@ You *could* embed this information in your gulpfile, but we recommend storing it
 /* Run select query on the server and save the results in a local CSV file */
 
 var gulp = require('gulp')
-var tapMysql = require('gulp-etl-tap-mysql')
+var mysqlAdapter = require('gulp-etl-mysql-adapter')
 var targetCsv = require('gulp-etl-target-csv').targetCsv
 
 // contains secure info; store in parent folder of this project, outside of repo
 let configObj = require('../../mysql-settings.json')
 
 exports.default = function() {
-    return tapMysql.src('mysqlResults.ndjson',configObj)
+    return mysqlAdapter.src('mysqlResults.ndjson',configObj)
     .pipe(targetCsv({ columns:true }))
     .pipe(gulp.dest('output/'));    
 }
