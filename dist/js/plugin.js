@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.tapMysql = exports.src = void 0;
 const through2 = require('through2');
 const Vinyl = require("vinyl");
 const PluginError = require("plugin-error");
@@ -8,7 +9,7 @@ const PLUGIN_NAME = module.exports.name;
 const loglevel = require("loglevel");
 const log = loglevel.getLogger(PLUGIN_NAME); // get a logger instance based on the project name
 log.setLevel((process.env.DEBUG_LEVEL || 'warn'));
-const mysql = require("mysql");
+const mysql = require("mysql2");
 const from2 = require('from2');
 const path = require("path");
 // import * as gulpBuffer from 'gulp-buffer'
@@ -34,7 +35,7 @@ function src(pretendFilePath, options) {
             .on('end', function () {
             log.debug('all rows have been received');
         })
-            .stream();
+            .stream({});
         vinylFile.contents = fileStream;
         log.debug('closing connection when all rows are received');
         conn.end();

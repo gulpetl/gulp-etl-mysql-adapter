@@ -6,7 +6,7 @@ const PLUGIN_NAME = module.exports.name;
 import * as loglevel from 'loglevel'
 const log = loglevel.getLogger(PLUGIN_NAME) // get a logger instance based on the project name
 log.setLevel((process.env.DEBUG_LEVEL || 'warn') as loglevel.LogLevelDesc)
-import * as mysql from 'mysql'
+import * as mysql from 'mysql2'
 
 const from2 = require('from2');
 import * as path from 'path'
@@ -41,7 +41,7 @@ export function src(this: any, pretendFilePath:string, options:any) {
     .on('end', function() {
       log.debug('all rows have been received')
     })    
-    .stream()
+    .stream({})
 
     vinylFile.contents=fileStream
     log.debug('closing connection when all rows are received')
