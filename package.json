@@ -1,6 +1,6 @@
 {
   "name": "gulp-etl-mysql-adapter",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "repository": "https://github.com/gulpetl/gulp-etl-mysql-adapter",
   "description": "Extract data from mysql into gulp-etl Message Stream JSON",
   "main": "dist/js/plugin.js",
@@ -12,7 +12,7 @@
     "build": "tsc",
     "prebuild": "npm run clean",
     "clean": "rimraf dist/*",
-    "test": "jest",    
+    "test": "jest",
     "bump": "npm version patch && git push --tags origin master"
   },
   "author": "peterl@sbcotton.com",
