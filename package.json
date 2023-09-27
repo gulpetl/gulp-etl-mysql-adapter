@@ -31,12 +31,12 @@
     "from2": "^2.3.0",
     "gulp-buffer": "0.0.2",
     "gulp-error-handle": "^1.0.1",
-    "loglevel": "^1.7.1",
-    "mysql2": "^2.2.5",
+    "loglevel": "^1.8.1",
+    "mysql2": "^3.6.1",
     "pkginfo": "^0.4.1",
-    "plugin-error": "^1.0.1",
+    "plugin-error": "^2.0.1",
     "through2": "^3.0.2",
-    "vinyl": "^2.2.1",
+    "vinyl": "^3.0.0",
     "vinyl-source-buffer": "^1.1.1"
   },
   "devDependencies": {
@@ -45,7 +45,8 @@
     "@types/loglevel": "^1.6.3",
     "@types/mysql": "^2.15.18",
     "@types/node": "^10.17.60",
-    "@types/vinyl": "^2.0.4",
+    "@types/plugin-error": "^1.0.0",
+    "@types/vinyl": "^2.0.8",
     "@types/vinyl-paths": "0.0.31",
     "gulp": "^4.0.2",
     "jest": "^24.9.0",
@@ -53,6 +54,6 @@
     "rimraf": "^2.7.1",
     "ts-jest": "^24.3.0",
     "ts-node": "^7.0.1",
-    "typescript": "^3.9.9"
+    "typescript": "^5.2.2"
   }
 }

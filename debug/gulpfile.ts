@@ -13,7 +13,7 @@ const errorHandler = require('gulp-error-handle'); // handle all errors in one h
 const pkginfo = require('pkginfo')(module); // project package.json info into module.exports
 const PLUGIN_NAME = module.exports.name;
 
-import Vinyl = require('vinyl') 
+import Vinyl from 'vinyl'
 
 
 // contains secure info; store in parent folder of this project, outside of repo
@@ -61,7 +61,7 @@ function runMysqlAdapter(callback: any) {
     })
 
   }
-  catch (err) {
+  catch (err:any) {
     log.error(err)
   }
 

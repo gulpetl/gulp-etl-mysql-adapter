@@ -1,5 +1,5 @@
 const through2 = require('through2')
-import Vinyl = require('vinyl')
+import * as Vinyl from 'vinyl';
 import PluginError = require('plugin-error');
 const pkginfo = require('pkginfo')(module); // project package.json info into module.exports
 const PLUGIN_NAME = module.exports.name;
@@ -63,7 +63,7 @@ export function src(this: any, pretendFilePath:string, options:any) {
       // - files silently upon error (such as passing strings instead of buffers)
     }
   }
-  catch (err) {
+  catch (err:any) {
     // emitting here causes some other error: TypeError: Cannot read property 'pipe' of undefined
     // result.emit(new PluginError(PLUGIN_NAME, err))
     
@@ -108,7 +108,7 @@ export function tapMysql(configObj: any) {
             // has to be buffer, for now, because we're using gulp-buffer
             this.push(Buffer.from(handledLine + '\n'));
           }
-        } catch (err) {
+        } catch (err:any) {
           returnErr = new PluginError(PLUGIN_NAME, err);
         }
   
@@ -139,7 +139,7 @@ export function tapMysql(configObj: any) {
               log.debug(tempStr)
               resultArray.push(tempStr);
             }
-          } catch (err) {
+          } catch (err:any) {
             returnErr = new PluginError(PLUGIN_NAME, err);
           }
         }
