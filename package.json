@@ -23,9 +23,18 @@
     "sql",
     "gulp",
     "gulp-etl",
+    "gulpetl",
     "vinyl",
-    "adapter"
+    "adapter",
+    "etl",
+    "data",
+    "node-red"
   ],
+  "node-red": {
+    "nodes": {
+      "mysql.src": "mysql_src.js"
+    }
+  },
   "homepage": "https://gulpetl.com",
   "dependencies": {
     "from2": "^2.3.0",
