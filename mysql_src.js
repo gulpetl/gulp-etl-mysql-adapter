@@ -1,15 +1,29 @@
-const gulp = require('gulp');
+const mysql = require('gulp-etl-mysql-adapter')
 
 module.exports = function (RED) {
-    function GulpSrcNode(config) {
+    function MysqlSrcNode(config) {
         RED.nodes.createNode(this, config);
         this.path = config.path;
+        this.config = config.config;
+        this.sql = config.sql;
 
         let node = this;
         // console.log("config", config)
 
-        node.on('input', function (msg, send) {
-            let configObj = { buffer: false, ...msg.config } // default to streaming mode
+        node.on('input', function (msg, send, done) {
+            let configObj;
+            try{
+                configObj = JSON.parse(this.config);
+                if (this.sql) 
+                    configObj.sql = this.sql;
+            }
+            catch(err) {
+                done("Unable to parse mysql.config: " + err);
+                return;
+            }    
+
+            configObj = mysql.extractConfig(configObj, msg?.config);
+
             // msg = RED.util.cloneMessage(msg);
 
             /** 
@@ -19,20 +33,24 @@ module.exports = function (RED) {
             msg.plugins = [];
 
             // set the payload to give info on the gulp stream we're creating
-            msg.payload = "gulp.src: " + node.path;
+            msg.payload = "mysql.src: " + node.path;
             msg.topic = "gulp-initialize";
 
             msg.plugins.push({
                 name: config.type,
-                // init:() => gulp.src(node.path, configObj)
+                // init:() => mysql.src(node.path, configObj)
                 init: () => {
-                    return gulp.src(node.path, configObj)
+                    return mysql.src(node.path, configObj)
                         .on("data", () => {
                             this.status({ fill: "green", shape: "dot", text: "active" });
                         })
                         .on("end", () => {
                             this.status({ fill: "green", shape: "ring", text: "ready" });
                         })
+                        .on("error", (err) => {
+                            console.error(err)
+                        })
+
                 }
             })
 
@@ -40,5 +58,5 @@ module.exports = function (RED) {
         });
 
     }
-    RED.nodes.registerType("gulp.src", GulpSrcNode);
+    RED.nodes.registerType("mysql.src", MysqlSrcNode);
 }

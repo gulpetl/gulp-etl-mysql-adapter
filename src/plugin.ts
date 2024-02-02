@@ -6,7 +6,8 @@ const PLUGIN_NAME = module.exports.name;
 import * as loglevel from 'loglevel'
 const log = loglevel.getLogger(PLUGIN_NAME) // get a logger instance based on the project name
 log.setLevel((process.env.DEBUG_LEVEL || 'warn') as loglevel.LogLevelDesc)
-import * as mysql from 'mysql2'
+import * as mysql from 'mysql2';
+import merge from 'merge';
 
 const from2 = require('from2');
 import * as path from 'path'
@@ -74,16 +75,47 @@ export function src(this: any, pretendFilePath:string, options:any) {
   return result
 }
 
+let localDefaultConfigObj: any = {};
+/**
+ * Merges config information for this plugin from all potential sources
+ * @param specificConfigObj A configObj set specifically for this plugin
+ * @param pipelineConfigObj A "super" configObj (e.g. file.data or msg.config) for the whole pipeline which may/may not apply to this plugin; 
+ * only used in absence of specificConfigObj
+ * @param defaultConfigObj A default configObj whose properties are overridden by the others
+ */
+export function extractConfig(specificConfigObj:any, pipelineConfigObj?:any, defaultConfigObj:any = localDefaultConfigObj) : any {
+  let configObj: any;
+  try {
+    let dataObj;
+    if (specificConfigObj)
+      dataObj = specificConfigObj
+    else if (pipelineConfigObj) {
+      // look for a property based on our plugin's name; assumes a complex object meant for multiple plugins
+      dataObj = pipelineConfigObj[PLUGIN_NAME];
+      // if we didn't find a config above, use the entire pipelineConfigObj object as our config
+      if (!dataObj) dataObj = pipelineConfigObj;
+      // merge superConfigObj config into our passed-in origConfigObj
+    }
+
+    // merge our chosen dataObj into defaultConfigObj, overriding any conflicting properties in defaultConfigObj
+    // merge.recursive(defaultConfigObj, dataObj); // <-- huge bug: can't parameter objects: changing them affects subsequent plugins in the pipeline
+    configObj = merge.recursive(true, defaultConfigObj, dataObj );
+  }
+  catch { }
+  return configObj;
+}
 
 /* This is a gulp-etl plugin. It is compliant with best practices for Gulp plugins (see
 https://github.com/gulpjs/gulp/blob/master/docs/writing-a-plugin/guidelines.md#what-does-a-good-plugin-look-like ),
 and like all gulp-etl plugins it accepts a configObj as its first parameter */
-export function tapMysql(configObj: any) {
-  if (!configObj) configObj = {}
+export function tapMysql(origConfigObj: any) {
 
   // creating a stream through which each file will pass - a new instance will be created and invoked for each file 
   // see https://stackoverflow.com/a/52432089/5578474 for a note on the "this" param
   const strm = through2.obj(function (this: any, file: Vinyl, encoding: string, cb: Function) {
+
+    let configObj:any = extractConfig(origConfigObj, file.data);
+
     const self = this
     let returnErr: any = null
 

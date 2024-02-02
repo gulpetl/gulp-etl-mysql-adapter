@@ -32,6 +32,13 @@ Since this adapter doesn't pull from an existing file, the "glob" parameter is a
 ```
 You *could* embed this information in your gulpfile, but we recommend storing it outside of any repo so that you don't accidentally publish it.
  
+### gulp-data ###
+This plugin supports the use of the [gulp-data](https://github.com/colynb/gulp-data#readme) api for passing in its configObj parameter. This
+allows data/options from the pipeline to be used to create options passed to this plugin when it runs. 
+
+### Node-RED ###
+[Node-RED](https://nodered.org/) is a low-code, visual programming environment for event-driven applications. Install this node under Manage Palette, look for `gulp-etl-mysql-adapter`
+
 ##### Sample gulpfile.js
 ```
 /* Run select query on the server and save the results in a local CSV file */

@@ -1,33 +1,145 @@
 <script type="text/javascript">
-    RED.nodes.registerType('gulp.src',{
+    RED.nodes.registerType('mysql.src', {
         category: 'gulp',
-        color: '#CF4647',
+        color: '#00758F',
         // color: '#3984FF', // dropbox blue night
         defaults: {
-            name: {value:""},
-            path: {value:""}
+            name: { value: "" },
+            path: { value: "" },
+            config: {
+                value: JSON.stringify({
+                    "buffer": false,
+                    "connection": {
+                        "host": "example.org",
+                        "user": "bob",
+                        "password": "secret",
+                        "database": "schemaName"
+                    }
+                }, undefined, "  ")
+            },
+            sql: { value: "" }
         },
         inputs: 1,
         outputs: 1,
         icon: "font-awesome/fa-files-o",
-        label: function() {
-            return this.name||this.path||"gulp.src";
+        label: function () {
+            return this.name || this.path || "mysql.src";
+        },
+        oneditprepare: function () {
+            const that = this;
+            const sqlStateId = RED.editor.generateViewStateId("node", this, "");
+            this.sqlEditor = RED.editor.createEditor({
+                id: 'node-input-sql-editor',
+                mode: 'ace/mode/sql',
+                value: $("#node-input-sql").val(),
+                stateId: sqlStateId
+            });
+            const configStateId = RED.editor.generateViewStateId("node", this, "");
+            this.configEditor = RED.editor.createEditor({
+                id: 'node-input-config-editor',
+                mode: 'ace/mode/json',
+                value: $("#node-input-config").val(),
+                stateId: configStateId
+            });
+            RED.popover.tooltip($("#node-template-expand-sql-editor"), RED._("node-red:common.label.expand"));
+            $("#node-template-expand-sql-editor").on("click", function (e) {
+                e.preventDefault();
+                const value = that.sqlEditor.getValue();
+                that.sqlEditor.saveView();
+                RED.editor.editText({
+                    // mode: $("#node-input-format").val(),
+                    value: value,
+                    stateId: sqlStateId,
+                    width: "Infinity",
+                    focus: true,
+                    complete: function (v, cursor) {
+                        that.sqlEditor.setValue(v, -1);
+                        setTimeout(function () {
+                            that.sqlEditor.restoreView();
+                            that.sqlEditor.focus();
+                        }, 250);
+                    }
+                })
+            })
+            RED.popover.tooltip($("#node-template-expand-config-editor"), RED._("node-red:common.label.expand"));
+            $("#node-template-expand-config-editor").on("click", function (e) {
+                e.preventDefault();
+                const value = that.configEditor.getValue();
+                that.configEditor.saveView();
+                RED.editor.editText({
+                    // mode: $("#node-input-format").val(),
+                    value: value,
+                    stateId: configStateId,
+                    width: "Infinity",
+                    focus: true,
+                    complete: function (v, cursor) {
+                        that.configEditor.setValue(v, -1);
+                        setTimeout(function () {
+                            that.configEditor.restoreView();
+                            that.configEditor.focus();
+                        }, 250);
+                    }
+                })
+            })
+        },
+        oneditsave: function () {
+            try {
+                $("#node-input-sql").val(this.sqlEditor.getValue());
+                this.sqlEditor.destroy();
+                delete this.sqlEditor;
+            }
+            catch { }
+            try {
+                $("#node-input-config").val(this.configEditor.getValue());
+                this.configEditor.destroy();
+                delete this.configEditor;
+            }
+            catch { }
+        },
+        oneditcancel: function () {
+            this.sqlEditor.destroy();
+            delete this.sqlEditor;
+            this.configEditor.destroy();
+            delete this.configEditor;
         }
     });
 </script>
 
-<script type="text/html" data-template-name="gulp.src">
+<script type="text/html" data-template-name="mysql.src">
     <div class="form-row">
         <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
     </div>
     <div class="form-row">
-        <label for="node-input-path"><i class="fa fa-tag"></i> Path</label>
+        <label for="node-input-path"><i class="fa fa-folder-open-o"></i> Path</label>
         <input type="text" id="node-input-path">
     </div>
+    <div class="form-row" style="position: relative; margin-bottom: 0px;">
+        <label for="node-input-config"><i class="fa fa-file-code-o"></i> <span>Config</span></label>
+        <input type="hidden" id="node-input-config" autofocus="autofocus">        
+        <div style="position: absolute; right:0;display:inline-block; text-align: right; font-size: 0.8em;">
+            <button type="button" id="node-template-expand-config-editor" class="red-ui-button red-ui-button-small"><i class="fa fa-expand"></i></button>
+        </div>
+        <div class="form-row node-text-editor-row">
+            <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-config-editor" ></div>
+        </div>
+    </div>
+
+    <div class="form-row" style="position: relative; margin-bottom: 0px;">
+        <label for="node-input-sql"><i class="fa fa-file-code-o"></i> <span>SQL</span></label>
+        <input type="hidden" id="node-input-sql" autofocus="autofocus">        
+        <div style="position: absolute; right:0;display:inline-block; text-align: right; font-size: 0.8em;">
+            <button type="button" id="node-template-expand-sql-editor" class="red-ui-button red-ui-button-small"><i class="fa fa-expand"></i></button>
+        </div>
+        <div class="form-row node-text-editor-row">
+            <div style="height: 250px; min-height:150px;" class="node-text-editor" id="node-input-sql-editor" ></div>
+        </div>
+    </div>
+
+
 </script>
 
-<script type="text/html" data-help-name="gulp.src">
+<script type="text/html" data-help-name="mysql.src">
     <p>Creates a stream for reading Vinyl objects from the file system.</p>
     <p>Can be used at the beginning or in the middle of a pipeline to add files based on the given globs.</p>
     
