@@ -1,6 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.tapMysql = exports.extractConfig = exports.src = void 0;
+exports.src = src;
+exports.extractConfig = extractConfig;
+exports.tapMysql = tapMysql;
 const through2 = require('through2');
 const Vinyl = require("vinyl");
 const PluginError = require("plugin-error");
@@ -63,7 +65,6 @@ function src(pretendFilePath, options) {
     }
     return result;
 }
-exports.src = src;
 let localDefaultConfigObj = {};
 /**
  * Merges config information for this plugin from all potential sources
@@ -93,7 +94,6 @@ function extractConfig(specificConfigObj, pipelineConfigObj, defaultConfigObj = 
     catch (_a) { }
     return configObj;
 }
-exports.extractConfig = extractConfig;
 /* This is a gulp-etl plugin. It is compliant with best practices for Gulp plugins (see
 https://github.com/gulpjs/gulp/blob/master/docs/writing-a-plugin/guidelines.md#what-does-a-good-plugin-look-like ),
 and like all gulp-etl plugins it accepts a configObj as its first parameter */
@@ -157,6 +157,8 @@ function tapMysql(origConfigObj) {
             }
             let data = resultArray.join('\n');
             file.contents = Buffer.from(data);
+            // set extension to match the new filetype; we are outputting a Message Stream, which is a .jsonl file
+            file.extname = '.jsonl';
             // we are done with file processing. Pass the processed file along
             log.debug('calling callback');
             cb(returnErr, file);
@@ -173,8 +175,8 @@ function tapMysql(origConfigObj) {
                 .pipe(newTransformer(streamName));
             // .on('end', function () {
             // })
-            // set extension to match the new filetype; we are outputting a Message Stream, which is an .ndjson file
-            file.extname = '.ndjson';
+            // set extension to match the new filetype; we are outputting a Message Stream, which is a .jsonl file
+            file.extname = '.jsonl';
             // after our stream is set up (not necesarily finished) we call the callback
             log.debug('calling callback');
             cb(returnErr, file);
@@ -182,5 +184,4 @@ function tapMysql(origConfigObj) {
     });
     return strm;
 }
-exports.tapMysql = tapMysql;
 //# sourceMappingURL=plugin.js.map

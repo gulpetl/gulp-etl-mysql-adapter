@@ -2,7 +2,7 @@
 
 This plugin connects to **MySQL** databases, running SQL queries and extracting the resulting rows to **gulp-etl** **Message Stream** JSON files via its **.src()** function. In the future it will also have **.dest()** which writes data to the database. It is a **gulp-etl** wrapper for [mysql2](https://www.npmjs.com/package/mysql2).
 
-This is a **[gulp-etl](https://gulpetl.com/)** adapter, but unlike most of the other gulp-etl modules it is not a [gulp](https://gulpjs.com/) **[plugin](https://gulpjs.com/docs/en/getting-started/using-plugins)**; it is actually a **[vinyl adapter](https://gulpjs.com/docs/en/api/concepts#vinyl-adapters)**--it features a replacement for **[gulp.src()](https://gulpjs.com/docs/en/api/src)** (and soon **[gulp.dest()](https://gulpjs.com/docs/en/api/dest)** as well). **gulp-etl** plugins and adapters work with [ndjson](http://ndjson.org/) data streams/files which we call **Message Streams** and which are compliant with the [Singer specification](https://github.com/singer-io/getting-started/blob/master/docs/SPEC.md#output). In the **gulp-etl** ecosystem, **taps** tap into an outside format or system (in this case, a MySQL database) and convert their contents/output to a Message Stream, **targets** convert/output Message Streams to an outside format or system, and **adapters** may do both (functioning as a both a tap and a target). These modules can then be stacked together to convert from one format or system to another, either directly or with tranformations or other parsing in between. Message Streams look like this:
+This is a **[gulp-etl](https://gulpetl.com/)** adapter, but unlike most of the other gulp-etl modules it is not a [gulp](https://gulpjs.com/) **[plugin](https://gulpjs.com/docs/en/getting-started/using-plugins)**; it is actually a **[vinyl adapter](https://gulpjs.com/docs/en/api/concepts#vinyl-adapters)**--it features a replacement for **[gulp.src()](https://gulpjs.com/docs/en/api/src)** (and soon **[gulp.dest()](https://gulpjs.com/docs/en/api/dest)** as well). **gulp-etl** plugins and adapters work with [JSON Lines](https://jsonlines.org/) data streams/files which we call **Message Streams** and which are compliant with the [Singer specification](https://github.com/singer-io/getting-started/blob/master/docs/SPEC.md#output). In the **gulp-etl** ecosystem, **taps** tap into an outside format or system (in this case, a MySQL database) and convert their contents/output to a Message Stream, **targets** convert/output Message Streams to an outside format or system, and **adapters** may do both (functioning as a both a tap and a target). These modules can then be stacked together to convert from one format or system to another, either directly or with tranformations or other parsing in between. Message Streams look like this:
 
 ```
 {"type": "SCHEMA", "stream": "users", "key_properties": ["id"], "schema": {"required": ["id"], "type": "object", "properties": {"id": {"type": "integer"}}}}
@@ -16,7 +16,7 @@ This is a **[gulp-etl](https://gulpetl.com/)** adapter, but unlike most of the o
 ### Usage
 **gulp** adapters take two parameters: a glob, which is used to locate file(s) in the file system, and an optional config object with settings specific to the adapter. For example: ```src('*.txt', {buffer:false})```
 
-Since this adapter doesn't pull from an existing file, the "glob" parameter is a "pretend" filename (with optional path info) which is assigned to the data file extracted from the server, e.g. ```mysqlData.ndjson```. And the configObj should look like this: 
+Since this adapter doesn't pull from an existing file, the "glob" parameter is a "pretend" filename (with optional path info) which is assigned to the data file extracted from the server, e.g. ```mysqlData.jsonl```. And the configObj should look like this: 
 ##### configObj / mysql-settings.json
 ```
 {
@@ -37,7 +37,7 @@ This plugin supports the use of the [gulp-data](https://github.com/colynb/gulp-d
 allows data/options from the pipeline to be used to create options passed to this plugin when it runs. 
 
 ### Node-RED ###
-[Node-RED](https://nodered.org/) is a low-code, visual programming environment for event-driven applications. Install this node under Manage Palette, look for `gulp-etl-mysql-adapter`
+[Node-RED](https://nodered.org/) is a low-code, visual programming environment for event-driven applications. Inside Node-RED, go to Manage Palette and search for [`gulp-etl-mysql-adapter`](https://flows.nodered.org/node/gulp-etl-mysql-adapter)
 
 ##### Sample gulpfile.js
 ```
@@ -51,7 +51,7 @@ var targetCsv = require('gulp-etl-target-csv').targetCsv
 let configObj = require('../../mysql-settings.json')
 
 exports.default = function() {
-    return mysqlAdapter.src('mysqlResults.ndjson',configObj)
+    return mysqlAdapter.src('mysqlResults.jsonl',configObj)
     .pipe(targetCsv({ columns:true }))
     .pipe(gulp.dest('output/'));    
 }

@@ -178,6 +178,9 @@ export function tapMysql(origConfigObj: any) {
         let data:string = resultArray.join('\n')
 
         file.contents = Buffer.from(data)
+
+        // set extension to match the new filetype; we are outputting a Message Stream, which is a .jsonl file
+        file.extname = '.jsonl'
         
         // we are done with file processing. Pass the processed file along
         log.debug('calling callback')    
@@ -196,8 +199,8 @@ export function tapMysql(origConfigObj: any) {
         // .on('end', function () {
         // })
 
-      // set extension to match the new filetype; we are outputting a Message Stream, which is an .ndjson file
-      file.extname = '.ndjson'
+      // set extension to match the new filetype; we are outputting a Message Stream, which is a .jsonl file
+      file.extname = '.jsonl'
 
         // after our stream is set up (not necesarily finished) we call the callback
       log.debug('calling callback')    
