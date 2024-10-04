@@ -11,18 +11,31 @@ module.exports = function (RED) {
         // console.log("config", config)
 
         node.on('input', function (msg, send, done) {
+        try {
             let configObj;
-            try{
-                configObj = JSON.parse(this.config);
-                if (this.sql) 
-                    configObj.sql = this.sql;
+            try {
+                if (this?.config?.trim())
+                    configObj = JSON.parse(this.config);
+                else {
+                    configObj = {};
+                }
             }
-            catch(err) {
-                done("Unable to parse mysql.config: " + err);
+            catch (err) {
+                console.log("Unable to parse mysql.config: " + err);
+                node.error("Unable to parse mysql.config: " + err);
                 return;
-            }    
+            }
+            if (!configObj)
+                configObj = {};
+            if (this?.sql?.trim())
+                configObj.sql = this.sql;
 
-            configObj = mysql.extractConfig(configObj, msg?.config);
+
+            // configObj = mysql.extractConfig(configObj, msg?.config);
+
+            // choosing here to use config and sql properties set on this node to be overridden by msg.config properties, if present. 
+            // This seems to be the intuitive behavior
+            configObj = mysql.extractConfig(null, msg?.config, configObj);
 
             // msg = RED.util.cloneMessage(msg);
 
@@ -49,12 +62,17 @@ module.exports = function (RED) {
                         })
                         .on("error", (err) => {
                             console.error(err)
-                        })
-
+                        });
                 }
             })
 
             send(msg);
+        }
+        catch (err) {
+            node.error("Error setting up for mysql.src(): " + err);
+            done("Error setting up for mysql.src(): " + err);
+            return;
+        }
         });
 
     }
