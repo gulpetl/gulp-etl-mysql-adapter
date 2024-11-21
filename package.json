@@ -6,7 +6,8 @@
   "main": "dist/js/plugin.js",
   "typings": "dist/types/plugin.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "mysql_src.*"
   ],
   "scripts": {
     "build": "tsc",
